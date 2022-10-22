@@ -7,21 +7,25 @@ import datetime as datetime
 import pandas as pd
 import hashlib
 
+
+# Record dataclass stores user input including sender, receiver, and amount
 @dataclass
 class Record:
     sender: str = "none"
     receiver: str = "none"
     amount: float = 0
 
+# Block dataclass
 @dataclass
 class Block:
+    # record is obtained from user
     record: Record
-
     creator_id: int
     prev_hash: str = "0"
     timestamp: str = datetime.datetime.utcnow().strftime("%H:%M:%S")
     nonce: int = 0
 
+    # generates a sha256 hash based on the input
     def hash_block(self):
         sha = hashlib.sha256()
 
@@ -43,11 +47,14 @@ class Block:
         return sha.hexdigest()
 
 
+#Pychain dataclass is basically a linked list of Blocks
 @dataclass
 class PyChain:
     chain: List[Block]
     difficulty: int = 4
 
+    # used to create a winning block with a certain difficulty
+    # this function is called by add_block
     def proof_of_work(self, block):
 
         calculated_hash = block.hash_block()
@@ -63,10 +70,12 @@ class PyChain:
         print("Wining Hash", calculated_hash)
         return block
 
+    # adds blocks to the end of the list
     def add_block(self, candidate_block):
         block = self.proof_of_work(candidate_block)
         self.chain += [block]
 
+    # used for validating the blockchain
     def is_valid(self):
         block_hash = self.chain[0].hash_block()
 
@@ -80,7 +89,6 @@ class PyChain:
         print("Blockchain is Valid")
         return True
 
-################################################################################
 # Streamlit Code
 
 # Adds the cache decorator for Streamlit
@@ -100,7 +108,7 @@ receiver_data = st.text_input("receiver data")
 amount_data = st.text_input("amount")
 
 
-
+# Adds block to blockchain if user clicks button
 if st.button("Add Block"):
     prev_block = pychain.chain[-1]
     prev_block_hash = prev_block.hash_block()
@@ -132,6 +140,10 @@ selected_block = st.sidebar.selectbox(
 
 st.sidebar.write(selected_block)
 
+# Validates blockchain if user clicks button
 if st.button("Validate Chain"):
-    st.write(pychain.is_valid())
+    if pychain.is_valid():
+        st.write("Blockchain is Valid!")
+    else:
+        st.write("Blockchain is invalid :(((")
 
